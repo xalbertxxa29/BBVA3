@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>LiderControl — Iniciar sesión</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="lc-login">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+    }
+    if (window.caches && caches.keys) {
+      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+    }
+  </script>
+
+  <!-- Overlay moderno -->
+  <div id="overlay" class="overlay" aria-hidden="true">
+    <div class="glass-loader">
+      <div class="glass-card">
+        <div class="loader-ring">
+          <span class="ring r1"></span>
+          <span class="ring r2"></span>
+          <span class="logo"><img src="icon-192.png" alt="LiderControl"></span>
+        </div>
+        <div class="loader-title" id="overlay-msg">Conectando…</div>
+        <div class="progress-bar"><div class="progress-fill" id="overlay-progress"></div></div>
+        <p class="loader-sub" id="overlay-sub">Verificando credenciales</p>
+      </div>
+    </div>
+  </div>
+
+  <main class="auth-shell">
+    <header class="brand">
+      <img src="icon-192.png" alt="LiderControl" class="brand-mark" />
+      <h1 class="brand-name">LiderControl</h1>
+    </header>
+
+    <section class="card auth-card" role="form" aria-labelledby="authTitle">
+      <h2 id="authTitle">Acceso</h2>
+
+      <label for="username">Correo electrónico</label>
+      <input type="email" id="username" inputmode="email" autocomplete="username" placeholder="nombre@empresa.com" required />
+
+      <label for="password">Contraseña</label>
+      <input type="password" id="password" autocomplete="current-password" placeholder="Tu contraseña" required />
+
+      <button id="login-btn" class="btn btn-danger btn-lg">Iniciar sesión</button>
+
+      <div class="links">
+        <button id="forgot-password" class="link" type="button">¿Olvidaste tu contraseña?</button>
+        <a class="link" href="#" rel="noopener">Políticas de Privacidad</a>
+      </div>
+    </section>
+
+    <footer class="auth-foot">
+      <p>© <span id="year"></span> J&V Alarmas — LiderControl</p>
+    </footer>
+  </main>
+
+  <!-- Firebase compat + config -->
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <script src="script.js"></script>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>LiderControl · Tareas</title>
+  <meta name="theme-color" content="#003366" />
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="menu.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <h1>Mis tareas</h1>
+    <p id="today"></p>
+  </header>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="home">Inicio</button>
+    <button class="tab-btn" data-tab="dash">Dashboard</button>
+  </div>
+
+  <!-- INICIO -->
+  <section id="tab-home" class="tab-content active">
+    <div class="card brand" style="margin-bottom:14px;">
+      <div class="label">Tu ubicación</div>
+      <div class="value" style="font-size:18px;font-weight:700">Mapa en vivo</div>
+    </div>
+    <div id="map"></div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="tab-dash" class="tab-content">
+    <div class="dash-head">
+      <div class="dash-filter">
+        <label for="filtro-turbina">Turbina:</label>
+        <select id="filtro-turbina" class="select">
+          <option value="CONSOLA TORRE">CONSOLA TORRE</option>
+          <option value="TURBINA-02">TURBINA-02</option>
+          <option value="TURBINA-03">TURBINA-03</option>
+          <option value="TURBINA-04">TURBINA-04</option>
+        </select>
+      </div>
+      <div id="mes-actual">Mes actual</div>
+    </div>
+
+    <div id="dash-loading"><span class="spinner"></span> Cargando métricas…</div>
+
+    <div class="dash-grid">
+      <!-- AGENCIAS SUPERVISADAS -->
+      <article class="card ok">
+        <div class="card-head">
+          <span class="card-icon i-building">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 21h18v-2H3v2zm2-4h4v-6H5v6zm6 0h4V5h-4v12zm6 0h4v-8h-4v8zM3 9h4V7H3v2zm0-4h4V3H3v2z"/>
+            </svg>
+          </span>
+          <div class="card-meta">
+            <div class="label">AGENCIAS SUPERVISADAS</div>
+            <small>Únicas en el mes</small>
+          </div>
+        </div>
+        <div class="value" id="ofi-superv">0</div>
+      </article>
+
+      <!-- AGENCIAS PENDIENTES -->
+      <article class="card warn">
+        <div class="card-head">
+          <span class="card-icon i-pend">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2a5 5 0 0 1 5 5h2a7 7 0 0 0-14 0h2a5 5 0 0 1 5-5zm1 7h-2v6h2V9zm-1 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+            </svg>
+          </span>
+          <div class="card-meta">
+            <div class="label">AGENCIAS PENDIENTES</div>
+            <small>Total por turbina – supervisados</small>
+          </div>
+        </div>
+        <div class="value" id="ofi-pend">0</div>
+      </article>
+
+      <!-- CAJEROS SUPERVISADOS -->
+      <article class="card info">
+        <div class="card-head">
+          <span class="card-icon i-atm">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2 6h20v12H2zM4 10h16V8H4v2zm0 6h10v-2H4v2z"/>
+            </svg>
+          </span>
+          <div class="card-meta">
+            <div class="label">CAJEROS SUPERVISADOS</div>
+            <small>Únicos en el mes</small>
+          </div>
+        </div>
+        <div class="value" id="cj-superv">0</div>
+      </article>
+
+      <!-- CAJEROS PENDIENTES -->
+      <article class="card brand">
+        <div class="card-head">
+          <span class="card-icon i-pend">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2a5 5 0 0 1 5 5h2a7 7 0 0 0-14 0h2a5 5 0 0 1 5-5zm1 7h-2v6h2V9zm-1 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+            </svg>
+          </span>
+          <div class="card-meta">
+            <div class="label">CAJEROS PENDIENTES</div>
+            <small>Total por turbina – supervisados</small>
+          </div>
+        </div>
+        <div class="value" id="cj-pend">0</div>
+      </article>
+    </div>
+  </section>
+
+  <!-- FABs -->
+  <div class="fab-container" id="fab">
+    <button id="fab-more" class="fab" title="Nueva tarea">⋮</button>
+    <div class="fab-options" id="fab-options">
+      <button id="fab-plus" class="fab" title="Nueva tarea">+</button>
+    </div>
+  </div>
+
+  <!-- Logout pill (abajo izquierda) -->
+  <button id="logout-fab" title="Cerrar sesión">Cerrar sesión</button>
+
+  <!-- Modal NUEVA TAREA -->
+  <div id="new-overlay" class="overlay" aria-hidden="true">
+    <div class="glass-loader" role="dialog" aria-modal="true" aria-labelledby="new-title">
+      <div class="glass-card">
+        <h3 id="new-title" class="loader-title">Nueva tarea</h3>
+        <p class="loader-sub">Elige qué vas a registrar</p>
+
+        <div class="options-grid" role="list">
+          <button class="option-card" role="listitem" data-type="ofi" aria-label="Registrar en Oficinas">
+            <div class="op-icon">🏢</div>
+            <div class="op-title">Oficinas</div>
+            <div class="op-sub">Reporte de sucursales (AGENCIA)</div>
+          </button>
+
+          <button class="option-card" role="listitem" data-type="caj" aria-label="Registrar en Cajeros">
+            <div class="op-icon">🏧</div>
+            <div class="op-title">Cajeros</div>
+            <div class="op-sub">Reporte de ATM / Terminal</div>
+          </button>
+        </div>
+
+        <div class="modal-actions">
+          <button id="new-cancel" class="btn btn-ghost">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay de carga global -->
+  <div id="overlay" class="overlay" aria-hidden="true">
+    <div class="glass-loader">
+      <div class="glass-card">
+        <div class="loader-title" id="overlay-msg">Cargando…</div>
+        <div class="progress-bar"><div class="progress-fill" id="overlay-progress"></div></div>
+        <p class="loader-sub" id="overlay-sub">Conectando con servicios…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Firebase compat + config -->
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <!-- Lógica -->
+  <script src="menu.js"></script>
+
+  <!-- ====== Google Maps (initMap callback lo define menu.js) ====== -->
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDlOoCAxAvWK5kpBkmnefd5dC62ns8v1pU&callback=initMap"></script>
+
+  <!-- ====== Registro del Service Worker (offline) ====== -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+      });
+    }
+  </script>
+
+  <!-- ====== Fallback mínimo para FAB/Modal si menu.js no cargara ====== -->
+  <script>
+    (function(){
+      const wrap = document.getElementById('fab');
+      const more = document.getElementById('fab-more');
+      const opts = document.getElementById('fab-options');
+      const plus = document.getElementById('fab-plus');
+      const modal = document.getElementById('new-overlay');
+      const close = document.getElementById('new-cancel');
+
+      function openFab(){ wrap.classList.add('open'); more.setAttribute('aria-expanded','true'); opts.style.display='flex'; }
+      function closeFab(){ wrap.classList.remove('open'); more.setAttribute('aria-expanded','false'); opts.style.display='none'; }
+      more?.addEventListener('click', ()=> wrap.classList.contains('open') ? closeFab() : openFab());
+      plus?.addEventListener('click', (e)=>{ e.preventDefault(); closeFab(); modal?.setAttribute('aria-hidden','false'); });
+      close?.addEventListener('click', ()=> modal?.setAttribute('aria-hidden','true'));
+      modal?.addEventListener('click', (e)=>{ if(e.target===modal) modal.setAttribute('aria-hidden','true'); });
+    })();
+  </script>
+</body>
+</html>
+
