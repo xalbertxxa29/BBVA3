@@ -149,10 +149,13 @@
 
         <div class="form-group" style="grid-column:1/-1">
           <label>Tomar foto</label>
-          <div style="display:flex; gap:10px; align-items:center;">
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
             <button id="btn-foto" class="btn btn-danger" type="button">Abrir cámara</button>
-            <small id="foto-hint" style="color:#333">Puedes adjuntar varias fotos.</small>
+            <button id="btn-adjuntar" class="btn" type="button">Adjuntar imagen</button>
+            <input id="file-pick-main" type="file" accept="image/*" multiple style="display:none" />
+            <span style="color:#555">Puedes adjuntar varias fotos.</span>
           </div>
+
           <div id="foto-preview" class="preview"></div>
         </div>
       </div>

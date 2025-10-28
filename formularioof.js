@@ -420,7 +420,15 @@
 
   // =================== Cámara: wiring ===================
   function wireCamera(){
+    // Botón existente: abre cámara
     $('#btn-foto')?.addEventListener('click', camOpen);
+
+    // NUEVO: adjuntar desde almacenamiento
+    const pickMain = $('#file-pick-main');
+    $('#btn-adjuntar')?.addEventListener('click', () => pickMain?.click());
+    pickMain?.addEventListener('change', () => camFromFiles(pickMain.files));
+
+    // Overlay de cámara (lo que ya tenías)
     camEls.close?.addEventListener('click', camClose);
     camEls.shoot?.addEventListener('click', camFromCamera);
     camEls.flip?.addEventListener('click', async ()=>{
@@ -430,6 +438,7 @@
     camEls.fileBtn?.addEventListener('click', ()=> camEls.filePick.click());
     camEls.filePick?.addEventListener('change', ()=> camFromFiles(camEls.filePick.files));
   }
+
 
   // =================== Cancelar / Enviar ===================
   function wireActions(){
