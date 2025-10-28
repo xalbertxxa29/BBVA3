@@ -10,7 +10,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyC6V--xlNwoe5iB9QD8Y2s2SQ4M0yR0MmQ",
   authDomain: "bbva-37617.firebaseapp.com",
   projectId: "bbva-37617",
-  storageBucket: "bbva-37617.appspot.com", // <- appspot.com correcto
+  storageBucket: "bbva-37617.firebasestorage.app", // <- appspot.com correcto
   messagingSenderId: "923249356091",
   appId: "1:923249356091:web:e2e8a77bb33a55c37e9b1e"
 };
