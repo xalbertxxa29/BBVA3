@@ -14,27 +14,7 @@
   const $  = s => document.querySelector(s);
   const normU = t => (t||'').toString().normalize('NFD').replace(/\p{Diacritic}/gu,'').toUpperCase();
 
-  // Toast centrado (reemplaza alert)
-  function toast(msg, ms=2200){
-    let shell = document.getElementById('app-toast');
-    if (!shell){
-      shell = document.createElement('div');
-      shell.id = 'app-toast';
-      shell.style.cssText = 'position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:99999;';
-      const card = document.createElement('div');
-      card.id = 'app-toast-card';
-      card.style.cssText = 'max-width:90%;background:#111c;color:#fff;padding:14px 16px;border-radius:12px;backdrop-filter:blur(3px);font-weight:600;text-align:center';
-      shell.appendChild(card);
-      document.body.appendChild(shell);
-    }
-    const card = document.getElementById('app-toast-card');
-    card.textContent = msg;
-    shell.style.display = 'flex';
-    window.clearTimeout(shell._t);
-    shell._t = setTimeout(()=>{ shell.style.display='none'; }, ms);
-  }
-
-  function showOverlay(msg='Cargando…', sub=''){{
+  function showOverlay(msg='Cargando…', sub=''){
     const m = $('#overlay-msg'), s = $('#overlay-sub');
     if (m) m.textContent = msg;
     if (s) s.textContent = sub || '';
@@ -122,7 +102,7 @@
       const b = await camCaptureBlob();
       addPhotoBlob(b); // solo local
       camClose();
-    }catch(e){ toast('No se pudo capturar la foto.'); console.error(e); }
+    }catch(e){ alert('No se pudo capturar la foto.'); console.error(e); }
   }
   function camFromFiles(files){
     const arr = Array.from(files||[]);
@@ -244,7 +224,7 @@
     try{
       const snap = await d.collection('OFICINAS').get();
       OFFICES = snap.docs.map(doc => ({ id: doc.id, data: doc.data() }));
-    }catch(e){ console.error('OFICINAS:', e); toast('No se pudieron cargar las oficinas.'); }
+    }catch(e){ console.error('OFICINAS:', e); alert('No se pudieron cargar las oficinas.'); }
   }
   function wireSearch(){
     const input = $('#of-search'), sug = $('#of-suggest');
@@ -501,9 +481,9 @@
     const det    = $('#sel-detalle').value;
     const comment= $('#comentario').value.trim();
 
-    if (!ofName){ toast('Selecciona una oficina.'); return; }
-    if (!turno){ toast('Selecciona el turno.'); return; }
-    if (!cat || !mot || !nov){ toast('Completa la clasificación (Categoría, Motivo y Novedad).'); return; }
+    if (!ofName){ alert('Selecciona una oficina.'); return; }
+    if (!turno){ alert('Selecciona el turno.'); return; }
+    if (!cat || !mot || !nov){ alert('Completa la clasificación (Categoría, Motivo y Novedad).'); return; }
 
     // Ubicación actual con fallback
     const pos = await getCurrentPositionWithFallback();
@@ -560,13 +540,13 @@
         await idbPut(item);
         hideOverlay();
         clearPhotos();
-        toast('Guardado sin conexión. Se enviará automáticamente al reconectar.');
+        alert('Guardado sin conexión. Se enviará automáticamente al reconectar.');
         window.location.href = 'menu.html';
         return;
       }catch(e){
         hideOverlay();
         console.error('Error guardando en cola offline:', e);
-        toast('No se pudo guardar en la cola offline.');
+        alert('No se pudo guardar en la cola offline.');
         return;
       }
     }
@@ -579,7 +559,7 @@
       showOverlay('Enviando reporte…','Guardando en Firestore'); setProgress(1);
       await d.collection('reportes_oficinas').add(payload);
       hideOverlay();
-      toast('Reporte enviado correctamente.');
+      alert('Reporte enviado correctamente.');
       clearPhotos();
       window.location.href = 'menu.html';
     }catch(e){
@@ -599,12 +579,12 @@
         await idbPut(item);
         hideOverlay();
         clearPhotos();
-        toast('No hay conexión estable. Guardado en cola para reintento.');
+        alert('No hay conexión estable. Guardado en cola para reintento.');
         window.location.href = 'menu.html';
       }catch(e2){
         hideOverlay();
         console.error('No se pudo guardar en cola:', e2);
-        toast('No se pudo enviar ni guardar en cola. Intenta nuevamente.');
+        alert('No se pudo enviar ni guardar en cola. Intenta nuevamente.');
       }
     }
   }
