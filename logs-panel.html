@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Logs - LiderControl</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .user-selector {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 10px 15px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #764ba2;
+    }
+
+    button.secondary {
+      background: #6c757d;
+    }
+
+    button.secondary:hover {
+      background: #5a6268;
+    }
+
+    button.danger {
+      background: #dc3545;
+    }
+
+    button.danger:hover {
+      background: #c82333;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .stat-card h3 {
+      color: #667eea;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .stat-subtext {
+      color: #999;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    .content {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .export-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    thead {
+      background: #f8f9fa;
+    }
+
+    th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #333;
+      border-bottom: 2px solid #dee2e6;
+      font-size: 14px;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #dee2e6;
+      font-size: 14px;
+    }
+
+    tbody tr:hover {
+      background: #f8f9fa;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .badge-login {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .badge-logout {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .location-badge {
+      background: #cfe2ff;
+      color: #084298;
+      cursor: pointer;
+    }
+
+    .location-badge:hover {
+      opacity: 0.8;
+    }
+
+    .no-data {
+      padding: 40px;
+      text-align: center;
+      color: #999;
+    }
+
+    .session-card {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      border-left: 4px solid #667eea;
+    }
+
+    .session-card strong {
+      color: #333;
+    }
+
+    .session-time {
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .session-duration {
+      color: #28a745;
+      font-weight: 600;
+    }
+
+    .location-info {
+      background: #e7f3ff;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-top: 10px;
+      line-height: 1.6;
+    }
+
+    .location-info strong {
+      color: #084298;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      color: white;
+      font-size: 12px;
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .user-selector {
+        flex-direction: column;
+      }
+
+      table {
+        font-size: 12px;
+      }
+
+      th, td {
+        padding: 8px;
+      }
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+
+    .modal-content h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .modal-content p {
+      line-height: 1.6;
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    .modal-close {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📊 Panel de Logs de Sesión</h1>
+      <p>Visualiza y gestiona tus registros de acceso</p>
+      
+      <div class="user-selector">
+        <input 
+          type="text" 
+          id="userInput" 
+          placeholder="Ingresa tu email para ver tus logs..."
+        >
+        <button onclick="loadUserLogs()">Cargar Logs</button>
+        <button class="secondary" onclick="showAllUsers()">Ver Todos</button>
+      </div>
+    </header>
+
+    <div class="stats-grid" id="statsGrid" style="display: none;">
+      <div class="stat-card">
+        <h3>Total Eventos</h3>
+        <div class="stat-value" id="totalEvents">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Logins</h3>
+        <div class="stat-value" id="totalLogins">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Logouts</h3>
+        <div class="stat-value" id="totalLogouts">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Promedio Sesión</h3>
+        <div class="stat-value" id="avgDuration">-</div>
+        <div class="stat-subtext">minutos</div>
+      </div>
+    </div>
+
+    <div class="content" id="contentArea" style="display: none;">
+      <div class="export-buttons">
+        <button onclick="exportJSON()">📥 Exportar JSON</button>
+        <button class="secondary" onclick="exportCSV()">📥 Exportar CSV</button>
+        <button class="secondary" onclick="showSessions()">⏱️ Duración Sesiones</button>
+        <button class="secondary" onclick="showLocationStats()">📍 Estadísticas Ubicación</button>
+        <button class="danger" onclick="clearLogs()">🗑️ Limpiar Logs</button>
+      </div>
+
+      <div id="mainContent"></div>
+    </div>
+
+    <div class="footer" id="footer"></div>
+  </div>
+
+  <!-- Modal para ubicaciones -->
+  <div class="modal-overlay" id="locationModal">
+    <div class="modal-content">
+      <h2>📍 Información de Ubicación</h2>
+      <div id="locationDetails"></div>
+      <button class="modal-close" onclick="closeLocationModal()">Cerrar</button>
+    </div>
+  </div>
+
+  <script src="logs-utils.js"></script>
+  <script>
+    let currentUser = null;
+
+    function loadUserLogs() {
+      const email = document.getElementById('userInput').value.trim();
+      
+      if (!email) {
+        alert('Por favor ingresa un email');
+        return;
+      }
+
+      currentUser = email;
+      const logs = getLogs(email);
+
+      if (logs.length === 0) {
+        document.getElementById('statsGrid').style.display = 'none';
+        document.getElementById('contentArea').style.display = 'block';
+        document.getElementById('mainContent').innerHTML = '<div class="no-data">No hay logs registrados para este usuario</div>';
+        return;
+      }
+
+      // Mostrar estadísticas
+      showStats(email);
+    }
+
+    function showStats(userId) {
+      const logs = getLogs(userId);
+      const logins = getLoginLogs(userId);
+      const logouts = getLogoutLogs(userId);
+      const durations = getSessionDurations(userId);
+
+      const avgDuration = durations.length > 0
+        ? Math.round(durations.reduce((a, b) => a + b.duration, 0) / durations.length)
+        : 0;
+
+      document.getElementById('totalEvents').textContent = logs.length;
+      document.getElementById('totalLogins').textContent = logins.length;
+      document.getElementById('totalLogouts').textContent = logouts.length;
+      document.getElementById('avgDuration').textContent = avgDuration;
+
+      document.getElementById('statsGrid').style.display = 'grid';
+      document.getElementById('contentArea').style.display = 'block';
+
+      // Mostrar tabla de logs
+      let html = '<h3>Historial de Eventos</h3><table><thead><tr><th>Fecha</th><th>Hora</th><th>Acción</th><th>Ubicación</th><th>Session ID</th></tr></thead><tbody>';
+
+      logs.forEach(log => {
+        const badgeClass = log.action === 'login' ? 'badge-login' : 'badge-logout';
+        const locationBtn = log.location?.latitude 
+          ? `<button class="location-badge" onclick="showLocationDetails('${log.location.latitude}', '${log.location.longitude}', ${log.location.accuracy})">📍 Ver</button>`
+          : '-';
+
+        html += `<tr>
+          <td>${log.date}</td>
+          <td>${log.time}</td>
+          <td><span class="badge ${badgeClass}">${log.action.toUpperCase()}</span></td>
+          <td>${locationBtn}</td>
+          <td><small>${log.sessionId}</small></td>
+        </tr>`;
+      });
+
+      html += '</tbody></table>';
+      document.getElementById('mainContent').innerHTML = html;
+    }
+
+    function showSessions() {
+      if (!currentUser) {
+        alert('Selecciona un usuario primero');
+        return;
+      }
+
+      const durations = getSessionDurations(currentUser);
+
+      if (durations.length === 0) {
+        alert('No hay sesiones completadas');
+        return;
+      }
+
+      let html = '<h3>⏱️ Duración de Sesiones</h3>';
+      durations.forEach((session, idx) => {
+        html += `<div class="session-card">
+          <strong>Sesión ${idx + 1}</strong> - ${session.date}<br>
+          <span class="session-time">${session.login} → ${session.logout}</span><br>
+          Duración: <span class="session-duration">${session.duration} minutos</span>
+        </div>`;
+      });
+
+      document.getElementById('mainContent').innerHTML = html;
+    }
+
+    function showLocationStats() {
+      if (!currentUser) {
+        alert('Selecciona un usuario primero');
+        return;
+      }
+
+      const stats = getLocationStats(currentUser);
+
+      if (stats.count === 0) {
+        alert('No hay datos de ubicación');
+        return;
+      }
+
+      let html = '<h3>📍 Estadísticas de Ubicación</h3>';
+      html += `<div class="location-info">
+        <strong>Total registros:</strong> ${stats.count}<br>
+        <strong>Rango Latitud:</strong> ${stats.minLat.toFixed(4)} a ${stats.maxLat.toFixed(4)}<br>
+        <strong>Rango Longitud:</strong> ${stats.minLng.toFixed(4)} a ${stats.maxLng.toFixed(4)}<br>
+        <strong>Primera ubicación:</strong> ${stats.firstLocation.latitude.toFixed(4)}, ${stats.firstLocation.longitude.toFixed(4)}<br>
+        <strong>Última ubicación:</strong> ${stats.lastLocation.latitude.toFixed(4)}, ${stats.lastLocation.longitude.toFixed(4)}
+      </div>`;
+
+      document.getElementById('mainContent').innerHTML = html;
+    }
+
+    function showLocationDetails(lat, lng, accuracy) {
+      const latNum = parseFloat(lat);
+      const lngNum = parseFloat(lng);
+      const accNum = parseFloat(accuracy);
+
+      let html = `
+        <p><strong>Latitud:</strong> ${latNum.toFixed(6)}</p>
+        <p><strong>Longitud:</strong> ${lngNum.toFixed(6)}</p>
+        <p><strong>Precisión:</strong> ${accNum.toFixed(0)} metros</p>
+        <p><strong>Google Maps:</strong> <a href="https://maps.google.com/?q=${latNum},${lngNum}" target="_blank">Ver en mapa</a></p>
+      `;
+
+      document.getElementById('locationDetails').innerHTML = html;
+      document.getElementById('locationModal').classList.add('active');
+    }
+
+    function closeLocationModal() {
+      document.getElementById('locationModal').classList.remove('active');
+    }
+
+    function exportJSON() {
+      if (!currentUser) {
+        alert('Selecciona un usuario primero');
+        return;
+      }
+      exportLogsJSON(currentUser);
+    }
+
+    function exportCSV() {
+      if (!currentUser) {
+        alert('Selecciona un usuario primero');
+        return;
+      }
+      exportLogsCSV(currentUser);
+    }
+
+    function clearLogs() {
+      if (!currentUser) {
+        alert('Selecciona un usuario primero');
+        return;
+      }
+      clearUserLogs(currentUser);
+      document.getElementById('userInput').value = '';
+      document.getElementById('statsGrid').style.display = 'none';
+      document.getElementById('contentArea').style.display = 'none';
+    }
+
+    function showAllUsers() {
+      const keys = Object.keys(localStorage).filter(k => k.startsWith('logs_'));
+      const users = keys.map(k => k.replace('logs_', ''));
+
+      if (users.length === 0) {
+        alert('No hay usuarios registrados');
+        return;
+      }
+
+      let html = '<h3>📋 Usuarios Registrados</h3>';
+      html += '<table><thead><tr><th>Email</th><th>Eventos</th><th>Logins</th><th>Acción</th></tr></thead><tbody>';
+
+      users.forEach(user => {
+        const logs = getLogs(user);
+        const logins = getLoginLogs(user);
+        html += `<tr>
+          <td>${user}</td>
+          <td>${logs.length}</td>
+          <td>${logins.length}</td>
+          <td><button onclick="document.getElementById('userInput').value='${user}'; loadUserLogs();">Ver</button></td>
+        </tr>`;
+      });
+
+      html += '</tbody></table>';
+      document.getElementById('mainContent').innerHTML = html;
+      document.getElementById('statsGrid').style.display = 'none';
+      document.getElementById('contentArea').style.display = 'block';
+    }
+
+    // Cargar último usuario si existe
+    window.addEventListener('load', () => {
+      const lastUser = localStorage.getItem('lastViewedUser');
+      if (lastUser) {
+        document.getElementById('userInput').value = lastUser;
+        loadUserLogs();
+      }
+    });
+  </script>
+</body>
+</html>

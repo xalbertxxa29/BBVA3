@@ -65,18 +65,23 @@
 
   function placeMe(pos) {
     if (!pos || !map) return;
+    const latlng = [pos.lat, pos.lng];
     if (!meMarker) {
-      meMarker = new google.maps.Marker({
-        map,
-        position: pos,
+      meMarker = L.marker(latlng, {
         title: 'Tu ubicación',
-        // HTTPS para evitar mixed-content
-        icon: 'https://maps.gstatic.com/mapfiles/ms2/micons/blue-dot.png'
-      });
+        icon: L.icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        })
+      }).addTo(map);
     } else {
-      meMarker.setPosition(pos);
+      meMarker.setLatLng(latlng);
     }
-    map.setCenter(pos);
+    map.setView(latlng, map.getZoom());
   }
 
   function tryOneShot(highAccuracy = true, timeout = 8000) {
@@ -114,24 +119,28 @@
     }
   }
 
-  // callback para el script de Google Maps
+  // Inicialización de Leaflet
   function initMap() {
     try {
       const host = $('#map') || document.body;
-      map = new google.maps.Map(host, { center: DEFAULT_CENTER, zoom: 13 });
-      setTimeout(() => google.maps.event.trigger(map, 'resize'), 100);
+      if (!host) return;
 
-      // Arranca GPS con la primera interacción (mejor permisos en móvil/WebView)
+      map = L.map(host).setView([DEFAULT_CENTER.lat, DEFAULT_CENTER.lng], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      // Arranca GPS con la primera interacción
       document.addEventListener('pointerdown', function once() {
         startGPS().catch(() => {});
         document.removeEventListener('pointerdown', once);
       }, { once: true });
 
-      // Reajusta centro al rotar
+      // Reajusta vista al rotar
       window.addEventListener('resize', () => {
-        try { google.maps.event.trigger(map, 'resize'); } catch {}
+        try { map.invalidateSize(); } catch {}
       });
-    } catch {}
+    } catch (e) { console.error('Leaflet Init Error:', e); }
   }
   window.initMap = initMap;
 
@@ -350,5 +359,8 @@
 
     // Si el usuario nunca toca la pantalla (desktop), pedimos GPS una vez
     setTimeout(() => { try { startGPS(); } catch {} }, 600);
+
+    // Inicializar mapa (ya no hay callback de Google)
+    initMap();
   });
 })();

@@ -231,8 +231,8 @@
 
     await new Promise(res => a.onAuthStateChanged(u => { if(!u) location.href='index.html'; else res(); }));
 
-    // Si la API de Maps ya está cargada y no se inicializó, inicialízala
-    if (window.google && google.maps && !map) { initMapOfi(); }
+    // Inicializar mapa (ya no hay callback de Google)
+    initMapOfi();
 
     showOverlay('Cargando cajeros…','Leyendo colección CAJEROS');
     await loadCajeros(); hideOverlay();
@@ -308,16 +308,12 @@
     setVal(get('TURBINA'),  'cj-turbina','of-turbina');
 
     // Geocodificación (Perú)
-    if (window.google && google.maps){
-      geocoder = geocoder || new google.maps.Geocoder();
-      const addr = [get('DIRECCION'), get('DISTRITO'), 'Perú'].filter(Boolean).join(', ');
-      geocoder.geocode({ address: addr }, (results, status)=>{
-        if (status==='OK' && results && results[0]){
-          const g = results[0].geometry.location;
-          setCajeroMarker({ lat:g.lat(), lng:g.lng() });
-        }
-      });
-    }
+    const addr = [get('DIRECCION'), get('DISTRITO'), 'Perú'].filter(Boolean).join(', ');
+    geocodeNominatim(addr).then(res => {
+      if (res) {
+        setCajeroMarker(res);
+      }
+    });
   }
 
   // =================== NOMENCLATURA (cascada) ===================
@@ -428,12 +424,26 @@
   }
 
   function setCajeroMarker(pos){
+    if (!map) return;
+    const latlng = [pos.lat, pos.lng];
     if (!atmMarker){
-      atmMarker = new google.maps.Marker({ map, position: pos, title:'Cajero', icon:'http://maps.google.com/mapfiles/ms/icons/red-dot.png' });
-    }else atmMarker.setPosition(pos);
-    const b = new google.maps.LatLngBounds(); if (pos) b.extend(pos);
-    if (meMarker && meMarker.getPosition()) b.extend(meMarker.getPosition());
-    if (!b.isEmpty()) map.fitBounds(b);
+      atmMarker = L.marker(latlng, {
+        title: 'Cajero',
+        icon: L.icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        })
+      }).addTo(map);
+    } else atmMarker.setLatLng(latlng);
+
+    const bounds = L.latLngBounds();
+    bounds.extend(latlng);
+    if (meMarker) bounds.extend(meMarker.getLatLng());
+    map.fitBounds(bounds, { padding: [50, 50] });
   }
 
   function initUserWatch(){
@@ -442,12 +452,25 @@
     watchId = navigator.geolocation.watchPosition(
       p=>{
         lastUserPos = { lat:p.coords.latitude, lng:p.coords.longitude };
-        if (!meMarker) meMarker = new google.maps.Marker({ map, position: lastUserPos, title:'Tu ubicación', icon:'http://maps.google.com/mapfiles/ms/icons/blue-dot.png' });
-        else meMarker.setPosition(lastUserPos);
+        const latlng = [lastUserPos.lat, lastUserPos.lng];
+        if (!meMarker) {
+          meMarker = L.marker(latlng, {
+            title: 'Tu ubicación',
+            icon: L.icon({
+              iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+              shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+              iconSize: [25, 41],
+              iconAnchor: [12, 41],
+              popupAnchor: [1, -34],
+              shadowSize: [41, 41]
+            })
+          }).addTo(map);
+        } else meMarker.setLatLng(latlng);
       },
       e=>console.warn('GPS:', e.message), { enableHighAccuracy:true, maximumAge:0, timeout:12000 }
     );
   }
+
   function startGeoAlways(){
     try{ initUserWatch(); }catch{}
     document.addEventListener('pointerdown', function once(){
@@ -456,17 +479,35 @@
     }, { once:true });
   }
 
+  // Geocodificación con Nominatim (OpenStreetMap)
+  async function geocodeNominatim(address) {
+    try {
+      const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
+      const data = await resp.json();
+      if (data && data.length > 0) {
+        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+      }
+    } catch (e) {
+      console.error('Geocoding error:', e);
+    }
+    return null;
+  }
+
   // === Mapa: usa el MISMO nombre que el callback del HTML ===
   function initMapOfi(){
-    if (!(window.google && google.maps)) return;
-    const initial = { lat:-12.0453, lng:-77.0311 };
-    const host = document.getElementById('map-ofi') || document.getElementById('map-cj') || document.body;
-    map = new google.maps.Map(host, { center: initial, zoom: 13 });
-    geocoder = new google.maps.Geocoder();
-    setTimeout(()=> google.maps.event.trigger(map, 'resize'), 150);
+    const initial = [-12.0453, -77.0311];
+    const host = document.getElementById('map-ofi') || document.getElementById('map-cj');
+    if (!host) return;
+
+    map = L.map(host).setView(initial, 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    setTimeout(()=> map.invalidateSize(), 150);
   }
-  // Define el callback en window lo antes posible (evita "initMapOfi no es función")
-  window.initMapOfi = window.initMapOfi || initMapOfi;
+  // Define el callback lo antes posible
+  window.initMapOfi = initMapOfi;
 
   // =================== Cámara: wiring ===================
   function wireCamera(){

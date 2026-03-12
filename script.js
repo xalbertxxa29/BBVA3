@@ -1,6 +1,43 @@
 // ========== Utilidad corta ==========
 const $ = (s) => document.querySelector(s);
 
+// ========== Sistema de notificaciones moderno ==========
+function showToast(title, message = '', type = 'info', duration = 4000) {
+  const container = $('#toast-container');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  
+  const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+  const icon = icons[type] || icons.info;
+  
+  toast.innerHTML = `
+    <div class="toast-header">
+      <div class="toast-icon">${icon}</div>
+      <div class="toast-title">${title}</div>
+      <button class="toast-close">×</button>
+    </div>
+    ${message ? `<p class="toast-message">${message}</p>` : ''}
+  `;
+  
+  const closeBtn = toast.querySelector('.toast-close');
+  closeBtn.addEventListener('click', () => removeToast(toast));
+  
+  container.appendChild(toast);
+  
+  if (duration > 0) {
+    setTimeout(() => removeToast(toast), duration);
+  }
+  
+  return toast;
+}
+
+function removeToast(toast) {
+  toast.classList.add('removing');
+  setTimeout(() => toast.remove(), 300);
+}
+
 // ========== Footer ==========
 document.addEventListener('DOMContentLoaded', () => {
   const y = $('#year'); if (y) y.textContent = new Date().getFullYear();
@@ -44,6 +81,18 @@ function hideOverlay() {
 
 // ========== Autenticación ==========
 document.addEventListener('DOMContentLoaded', () => {
+  // Toggle de visibilidad de contraseña
+  const toggleBtn = document.getElementById('toggle-password');
+  const passwordInput = document.getElementById('password');
+  if (toggleBtn && passwordInput) {
+    toggleBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const isPassword = passwordInput.type === 'password';
+      passwordInput.type = isPassword ? 'text' : 'password';
+      toggleBtn.textContent = isPassword ? '🙈' : '👁️';
+    });
+  }
+
   // Si Firebase ya está cargado, fuerza persistencia LOCAL (por si la init no lo hizo)
   if (window.auth && firebase?.auth?.Auth?.Persistence?.LOCAL) {
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
@@ -72,13 +121,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const password = (passEl?.value || '').trim();
 
     if (!email || !password){
-      alert('Por favor, completa todos los campos.');
+      showToast('Campos requeridos', 'Por favor, completa todos los campos.', 'warning');
       return;
     }
 
     // Primer login requiere red si NO hay sesión previa
     if (!navigator.onLine && (!window.auth || !auth.currentUser)){
-      alert('No hay conexión. El primer inicio de sesión requiere internet.');
+      showToast('Sin conexión', 'El primer inicio de sesión requiere internet.', 'error');
       return;
     }
 
@@ -102,20 +151,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Caso típico de offline en primer login
       if (error?.code === 'auth/network-request-failed'){
-        alert(
-          'Error al iniciar sesión:\n' +
-          'No se pudo llegar a Firebase.\n\n' +
-          'Revisa:\n' +
-          '• Firebase Console → Authentication → Authorized domains: agrega "localhost" y "127.0.0.1".\n' +
-          '• Authentication → Sign-in method: habilita Email/Password.\n' +
-          '• Conexión a internet (el primer login requiere red).'
-        );
+        showToast('Sin conexión a internet', 'Verifica tu conexión y vuelve a intentar.', 'error');
       } else {
         switch(error?.code){
-          case 'auth/user-not-found':    alert('Usuario no encontrado.'); break;
-          case 'auth/wrong-password':    alert('Contraseña incorrecta.'); break;
-          case 'auth/too-many-requests': alert('Demasiados intentos. Intenta luego.'); break;
-          default:                       alert('Error al iniciar sesión: ' + (error?.message || 'Desconocido')); break;
+          case 'auth/user-not-found':    showToast('Correo no registrado', 'Este correo electrónico no está registrado en el sistema. Contacta a tu administrador.', 'error'); break;
+          case 'auth/wrong-password':    showToast('Credenciales inválidas', 'El correo o contraseña que ingresaste son incorrectos.', 'error'); break;
+          case 'auth/too-many-requests': showToast('Demasiados intentos', 'Has intentado iniciar sesión varias veces. Espera unos minutos e intenta de nuevo.', 'warning'); break;
+          default:                       showToast('Error al iniciar sesión', 'Ocurrió un problema inesperado. Intenta de nuevo.', 'error'); break;
         }
       }
     } finally {
@@ -131,15 +173,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const fp = document.getElementById('forgot-password');
   fp?.addEventListener('click', async ()=>{
     const email = (emailEl?.value || '').trim();
-    if(!email){ alert('Ingresa tu correo para enviarte el enlace.'); return; }
+    if(!email){ showToast('Ingresa tu correo', 'Escribe tu correo electrónico para enviar el enlace de recuperación.', 'warning'); return; }
     try{
-      showOverlay('Enviando enlace…');
+      showOverlay('Enviando enlace de recuperación…');
       await auth.sendPasswordResetEmail(email);
       hideOverlay();
-      alert('Enlace enviado a tu correo.');
+      showToast('Enlace enviado', 'Revisa tu correo electrónico para restablecer tu contraseña.', 'success');
     }catch(e){
       hideOverlay();
-      alert('No se pudo enviar: ' + (e?.message || 'Error desconocido'));
+      if (e?.code === 'auth/user-not-found') {
+        showToast('Correo no registrado', 'Este correo no está registrado en el sistema.', 'error');
+      } else {
+        showToast('Error al enviar', 'No pudimos procesar tu solicitud. Intenta de nuevo.', 'error');
+      }
     }
   });
 });
