@@ -383,27 +383,28 @@
     }
   }
 
+  const ICON_ME = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxOCIgZmlsbD0iIzAwMzM2NiIgZmlsbC1vcGFjaXR5PSIwLjE1Ii8+CiAgPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iOCIgZmlsbD0iIzAwNDQ4MSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+Cjwvc3ZnPg==';
+  const ICON_OFI = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCAzMiA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cGF0aCBkPSJNMTYgMEM3LjE2MzQ0IDAgMCA3LjE2MzQ0IDAgMTZDMCAyOCAxNiA0MCAxNiA0MEMxNiA0MCAzMiAyOCAzMiAxNkMzMiA3LjE2MzQ0IDI0LjgzNjYgMCAxNiAwWiIgZmlsbD0iI0I0MDAwMCIvPgogIDxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjYiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPg==';
+
   function setOfficeMarker(pos){
     if (!map) return;
     const latlng = [pos.lat, pos.lng];
-    if (!ofiMarker){
-      ofiMarker = L.marker(latlng, {
-        title: 'Oficina',
-        icon: L.icon({
-          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41]
-        })
-      }).addTo(map);
-    } else ofiMarker.setLatLng(latlng);
+    if (ofiMarker) map.removeLayer(ofiMarker);
+    
+    ofiMarker = L.marker(latlng, {
+      title: 'Oficina',
+      icon: L.icon({
+        iconUrl: ICON_OFI,
+        iconSize: [32, 40],
+        iconAnchor: [16, 40],
+        popupAnchor: [0, -40]
+      })
+    }).addTo(map);
 
     const bounds = L.latLngBounds();
     bounds.extend(latlng);
     if (meMarker) bounds.extend(meMarker.getLatLng());
-    map.fitBounds(bounds, { padding: [50, 50] });
+    map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
   }
 
   function initUserWatch(){
@@ -413,19 +414,16 @@
       p=>{
         lastUserPos = { lat:p.coords.latitude, lng:p.coords.longitude };
         const latlng = [lastUserPos.lat, lastUserPos.lng];
-        if (!meMarker) {
-          meMarker = L.marker(latlng, {
-            title: 'Tu ubicación',
-            icon: L.icon({
-              iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-              shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-              iconSize: [25, 41],
-              iconAnchor: [12, 41],
-              popupAnchor: [1, -34],
-              shadowSize: [41, 41]
-            })
-          }).addTo(map);
-        } else meMarker.setLatLng(latlng);
+        if (meMarker) map.removeLayer(meMarker);
+        
+        meMarker = L.marker(latlng, {
+          title: 'Tu ubicación',
+          icon: L.icon({
+            iconUrl: ICON_ME,
+            iconSize: [40, 40],
+            iconAnchor: [20, 20]
+          })
+        }).addTo(map);
       },
       e=>console.warn('GPS:', e.message), { enableHighAccuracy:true, maximumAge:0, timeout:12000 }
     );
@@ -617,9 +615,18 @@
       showOverlay('Enviando reporte…','Guardando en Firestore'); setProgress(1);
       await d.collection('reportes_oficinas').add(payload);
       hideOverlay();
-      alert('Reporte enviado correctamente.');
+      
+      const succModal = $('#success-modal');
+      if (succModal) {
+        succModal.classList.add('active');
+        succModal.setAttribute('aria-hidden', 'false');
+        $('#btn-success-ok')?.addEventListener('click', () => {
+          window.location.href = 'menu.html';
+        }, { once: true });
+      } else {
+        window.location.href = 'menu.html';
+      }
       clearPhotos();
-      window.location.href = 'menu.html';
     }catch(e){
       // Falla de red en el último paso → enviar a cola
       hideOverlay();

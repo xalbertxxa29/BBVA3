@@ -1,4 +1,4 @@
-/* service-worker.js — v9
+/* service-worker.js — v10
    ✔ Intercepta GET de mismo-origen y de CDNs conocidos (Firebase/Leaflet)
    ✔ Precache de assets locales y externos esenciales
    ✔ Navigation Preload para navegaciones más rápidas
@@ -6,7 +6,7 @@
    ✔ Fallback offline (menu.html o index.html)
 */
 
-const CACHE_NAME = 'lidercontrol-cache-v9';
+const CACHE_NAME = 'lidercontrol-cache-v10';
 
 const PRECACHE = [
   './',
@@ -14,6 +14,7 @@ const PRECACHE = [
   './menu.html',
   './formulariocaj.html',
   './formularioof.html',
+  './logs-panel.html',
 
   // CSS locales
   './styles.css',
@@ -25,10 +26,11 @@ const PRECACHE = [
   './formulariocaj.js',
   './formularioof.js',
   './firebase-config.js',
+  './logout.js',
+  './logs-utils.js',
 
   // PWA & Assets
   './manifest.json',
-  './favicon.ico',
   './icon-192.png',
 
   // Leaflet (CDN)
