@@ -564,23 +564,32 @@
 
   // ===== Enviar (online u offline) =====
   async function sendForm(){
+    const btn = $('#btn-enviar');
+    if (btn) btn.disabled = true;
+    showOverlay('Iniciando envío…', 'Validando datos');
+
     const user = a.currentUser;
     const cjName = getVal('cj-name','of-name');
-    const turno  = getVal('of-turno','cj-turno');         // <- toma cualquiera de los dos ids
+    const turno  = getVal('of-turno','cj-turno');
     const cat    = getVal('sel-cat');
     const mot    = getVal('sel-motivo');
     const nov    = getVal('sel-nov');
     const det    = getVal('sel-detalle');
     const comment= (document.getElementById('comentario')?.value || '').trim();
 
-    if (!cjName){ toast('Selecciona un cajero.'); return; }
-    if (!turno){ toast('Selecciona el turno.'); return; }
-    if (!cat || !mot || !nov){ toast('Completa la clasificación (Categoría, Motivo y Novedad).'); return; }
+    if (!cjName || !turno || !cat || !mot || !nov){
+      hideOverlay();
+      if (btn) btn.disabled = false;
+      if (!cjName){ toast('Selecciona un cajero.'); return; }
+      if (!turno){ toast('Selecciona el turno.'); return; }
+      toast('Completa la clasificación (Categoría, Motivo y Novedad).');
+      return;
+    }
 
     const pos = await getCurrentPositionWithFallback();
     lastUserPos = { lat: pos.lat, lng: pos.lng };
 
-    const cjPos = atmMarker && atmMarker.getPosition() ? { lat: atmMarker.getPosition().lat(), lng: atmMarker.getPosition().lng() } : null;
+    const cjPos = atmMarker ? { lat: atmMarker.getLatLng().lat, lng: atmMarker.getLatLng().lng } : null;
 
     const photoBlobs = (PHOTOS||[]).map(p => p.blob).filter(Boolean);
 

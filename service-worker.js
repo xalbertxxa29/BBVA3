@@ -1,4 +1,4 @@
-/* service-worker.js — v8
+/* service-worker.js — v9
    ✔ Intercepta GET de mismo-origen y de CDNs conocidos (Firebase/Leaflet)
    ✔ Precache de assets locales y externos esenciales
    ✔ Navigation Preload para navegaciones más rápidas
@@ -6,7 +6,7 @@
    ✔ Fallback offline (menu.html o index.html)
 */
 
-const CACHE_NAME = 'lidercontrol-cache-v8';
+const CACHE_NAME = 'lidercontrol-cache-v9';
 
 const PRECACHE = [
   './',
@@ -30,7 +30,6 @@ const PRECACHE = [
   './manifest.json',
   './favicon.ico',
   './icon-192.png',
-  './icon-512.png',
 
   // Leaflet (CDN)
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',

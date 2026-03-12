@@ -521,6 +521,10 @@
 
   // ===== Enviar (online u offline) =====
   async function sendForm(){
+    const btn = $('#btn-enviar');
+    if (btn) btn.disabled = true;
+    showOverlay('Iniciando envío…', 'Validando datos');
+
     const user = a.currentUser;
     const ofName = $('#of-name').value.trim();
     const turno  = $('#of-turno').value;
@@ -530,15 +534,20 @@
     const det    = $('#sel-detalle').value;
     const comment= $('#comentario').value.trim();
 
-    if (!ofName){ alert('Selecciona una oficina.'); return; }
-    if (!turno){ alert('Selecciona el turno.'); return; }
-    if (!cat || !mot || !nov){ alert('Completa la clasificación (Categoría, Motivo y Novedad).'); return; }
+    if (!ofName || !turno || !cat || !mot || !nov){
+      hideOverlay();
+      if (btn) btn.disabled = false;
+      if (!ofName){ alert('Selecciona una oficina.'); return; }
+      if (!turno){ alert('Selecciona el turno.'); return; }
+      alert('Completa la clasificación (Categoría, Motivo y Novedad).');
+      return;
+    }
 
     // Ubicación actual con fallback
     const pos = await getCurrentPositionWithFallback();
     lastUserPos = { lat: pos.lat, lng: pos.lng };
 
-    const ofPos = ofiMarker && ofiMarker.getPosition() ? { lat: ofiMarker.getPosition().lat(), lng: ofiMarker.getPosition().lng() } : null;
+    const ofPos = ofiMarker ? { lat: ofiMarker.getLatLng().lat, lng: ofiMarker.getLatLng().lng } : null;
 
     // Fotos como Blobs
     const photoBlobs = (PHOTOS||[]).map(p => p.blob).filter(Boolean);
